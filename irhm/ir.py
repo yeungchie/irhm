@@ -24,6 +24,13 @@ class Items(list):
             return max(values)
 
 
+@dataclass
+class ArrayInfo:
+    max: float
+    min: float
+    ndarray: np.ndarray
+
+
 class Tiles(defaultdict):
     def __init__(self) -> None:
         super().__init__(Colleciton)
@@ -31,15 +38,26 @@ class Tiles(defaultdict):
     def __getitem__(self, *args, **kwargs) -> "Colleciton":
         return super().__getitem__(*args, **kwargs)
 
-    def value_array(self, net1: str, net2: str) -> np.ndarray:
+    def array_info(self, net1: str, net2: str) -> ArrayInfo:
         x_size, y_size = 0, 0
         for x, y in self:
             x_size = max(x_size, x)
             y_size = max(y_size, y)
+        max_v = None
+        min_v = None
         array = np.zeros((x_size + 1, y_size + 1))
         for xy, c in self.items():
-            array[xy] = c.calc_drop(net1, net2)
-        return array
+            value = c.calc_drop(net1, net2)
+            array[xy] = value
+            if max_v is None or value > max_v:
+                max_v = value
+            if min_v is None or value < min_v:
+                min_v = value
+        return ArrayInfo(
+            max=max_v,
+            min=min_v,
+            ndarray=array,
+        )
 
 
 class Colleciton(defaultdict):

@@ -75,6 +75,10 @@ class HeatmapWindow(QMainWindow):
         self.__array = tuple(map(int, value[:2]))
 
     @property
+    def value_array(self):
+        return self.__value_array
+
+    @property
     def tiles(self) -> Tiles:
         return self.__tiles
 
@@ -161,10 +165,12 @@ class HeatmapWindow(QMainWindow):
 
     def __refresh_heatmap(self, net1: str, net2: str) -> None:
         self.heatmap_axes = self.heatmap_figure.add_subplot(111)
+        info = self.tiles.array_info(net1, net2)
+        self.__value_array = info.ndarray
         seaborn.heatmap(
-            self.tiles.value_array(net1, net2).transpose(),
-            annot=True,
-            fmt=".2f",
+            self.value_array,
+            # annot=True,
+            # fmt=".2f",
             cmap="coolwarm",
             ax=self.heatmap_axes,
             linewidths=0.5,
@@ -175,6 +181,28 @@ class HeatmapWindow(QMainWindow):
         self.heatmap_axes.set_xlabel("Columns")
         self.heatmap_axes.set_ylabel("Rows")
         self.heatmap_axes.invert_yaxis()
+
+        # append text
+        mid_value = (info.max + info.min) / 2
+        qtr_value = (info.max - info.min) / 4
+        for col in range(self.array[0]):
+            for row in range(self.array[1]):
+                value = self.value_array[row, col]
+                if abs(value - mid_value) > qtr_value:
+                    color = "#FFFFFF"
+                    print(value)
+                else:
+                    color = "#000000"
+                self.heatmap_axes.text(
+                    col + 0.5,
+                    row + 0.5,
+                    f"{value:.2f}",
+                    ha="center",
+                    va="center",
+                    color=color,
+                    fontsize=10,
+                )
+
         self.heatmap_canvas.draw()
         self.heatmap_canvas.mpl_connect("button_press_event", self.__heatmap_canvas_cb)
 
