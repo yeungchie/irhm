@@ -190,7 +190,6 @@ class HeatmapWindow(QMainWindow):
                 value = self.value_array[row, col]
                 if abs(value - mid_value) > qtr_value:
                     color = "#FFFFFF"
-                    print(value)
                 else:
                     color = "#000000"
                 self.heatmap_axes.text(
