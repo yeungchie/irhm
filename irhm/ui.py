@@ -10,14 +10,17 @@ from ._qt import (
     QMainWindow,
     QWidget,
     QVBoxLayout,
+    QHBoxLayout,
     QTableWidget,
     QTableWidgetItem,
     QHeaderView,
     QSplitter,
     QLabel,
     QComboBox,
-    QHBoxLayout,
     QSizePolicy,
+    QSpinBox,
+    QPushButton,
+    QFrame,
     QIcon,
     Qt,
     FigureCanvasQTAgg,
@@ -219,12 +222,21 @@ class HeatmapWindow(QMainWindow):
         self.heatmap_axes.add_patch(self.heatmap_hilight_rect)
         self.heatmap_canvas.draw()
 
+    def __array_btn_cb(self) -> None:
+        net1 = self.net_selector1.currentText()
+        net2 = self.net_selector2.currentText()
+        self.array = (self.arr_col_input.value(), self.arr_row_input.value())
+        self.init()
+        self.net_selector1.setCurrentText(net1)
+        self.net_selector2.setCurrentText(net2)
+        self.__net_selector_cb()
+
     def __ui(self) -> None:
         self.setWindowTitle(f"IR-Drop Heatmap - {release.version}")
         icon = Path(__file__).parent / "icon.png"
         if icon.exists():
             self.setWindowIcon(QIcon(str(icon)))
-        self.setGeometry(100, 100, 1200, 800)
+        self.setGeometry(100, 100, 1600, 800)
 
         self.setCentralWidget(main_widget := QWidget())
         main_widget.setLayout(main_layout := QHBoxLayout())
@@ -245,18 +257,18 @@ class HeatmapWindow(QMainWindow):
         self.heatmap_table.clicked.connect(self.__heatmap_table_click_cb)
         left_layout.addWidget(self.heatmap_table)
 
-        # 右侧
-        right_region = QSplitter(Qt.Orientation.Vertical)  # 右侧垂直分割窗
-        # 右侧 heatmap
+        # 中间
+        middle_region = QSplitter(Qt.Orientation.Vertical)  # 中间垂直分割窗
+        # 中间 heatmap
         self.heatmap_figure = Figure(facecolor="#DFDFDF")
         self.heatmap_canvas = FigureCanvasQTAgg(self.heatmap_figure)
-        right_region.addWidget(self.heatmap_canvas)
+        middle_region.addWidget(self.heatmap_canvas)
         self.heatmap_canvas.setSizePolicy(
             QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
         )
-        # 右侧底部表格分区
-        bottom_region = QSplitter(Qt.Orientation.Horizontal)  # 右侧底部水平分割窗
-        right_region.addWidget(bottom_region)
+        # 中间底部表格分区
+        bottom_region = QSplitter(Qt.Orientation.Horizontal)  # 中间底部水平分割窗
+        middle_region.addWidget(bottom_region)
         self.net_selector1, self.net_table1 = create_selector(
             parent=bottom_region,
             callback=self.__net_selector_cb,
@@ -266,7 +278,47 @@ class HeatmapWindow(QMainWindow):
             callback=self.__net_selector_cb,
         )
 
+        # 右侧
+        right_region = QWidget()
+        right_region.setLayout(right_layout := QVBoxLayout())
+        # array inputter
+        # array_region = QSplitter(Qt.Orientation.Horizontal)
+        array_region = QWidget()
+        array_region.setLayout(array_layout := QHBoxLayout())
+        self.arr_col_input = QSpinBox()
+        self.arr_col_input.setRange(1, 100)
+        self.arr_col_input.setValue(self.array[0])
+        self.arr_row_input = QSpinBox()
+        self.arr_row_input.setRange(1, 100)
+        self.arr_row_input.setValue(self.array[1])
+        array_btn = QPushButton("Refresh")
+        array_btn.clicked.connect(self.__array_btn_cb)
+        array_prompt = QLabel("Array Size:")
+        array_prompt.setAlignment(
+            Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+        )
+        array_x_label = QLabel("X")
+        array_x_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        for i, field in enumerate(
+            (
+                array_prompt,
+                self.arr_col_input,
+                array_x_label,
+                self.arr_row_input,
+                array_btn,
+            )
+        ):
+            array_layout.addWidget(field)
+            array_layout.setStretch(i, 1)
+        array_region_line = QFrame()
+        array_region_line.setFrameShape(QFrame.Shape.HLine)
+        array_region_line.setFrameShadow(QFrame.Shadow.Sunken)
+        right_layout.addWidget(array_region)
+        right_layout.addWidget(array_region_line)
+        right_layout.addStretch()
+
         main_splitter.addWidget(left_region)
+        main_splitter.addWidget(middle_region)
         main_splitter.addWidget(right_region)
 
 
@@ -304,7 +356,11 @@ def create_selector(
 
     selector_region = QWidget()
     selector_region.setLayout(selector_layout := QHBoxLayout())
-    selector_layout.addWidget(QLabel("Select Net:"))
+    selector_prompt = QLabel("Select Net:")
+    selector_prompt.setAlignment(
+        Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+    )
+    selector_layout.addWidget(selector_prompt)
     selector_layout.addWidget(selector := QComboBox())
     selector.currentIndexChanged.connect(callback)
     layout.addWidget(selector_region)
