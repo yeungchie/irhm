@@ -5,6 +5,15 @@ from typing import Optional, Tuple, Union
 
 import numpy as np
 
+__all__ = [
+    "Item",
+    "Items",
+    "ArrayInfo",
+    "Tiles",
+    "Colleciton",
+    "from_file",
+]
+
 
 @dataclass
 class Item:
@@ -13,6 +22,7 @@ class Item:
     x: float
     y: float
     path: Optional[str] = field(default=None, repr=False)
+    raw: Optional[str] = field(default=None, repr=False, compare=False)
 
 
 class Items(list):
@@ -179,6 +189,7 @@ def from_file(file: Union[str, Path]) -> Colleciton:
                 x=float(x),
                 y=float(y),
                 path=path,
+                raw=line,
             )
         )
     return collection
