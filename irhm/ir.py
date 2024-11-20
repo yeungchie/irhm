@@ -12,6 +12,7 @@ __all__ = [
     "Tiles",
     "Colleciton",
     "from_file",
+    "from_string",
 ]
 
 
@@ -63,6 +64,8 @@ class Tiles(defaultdict):
                 max_v = value
             if min_v is None or value < min_v:
                 min_v = value
+        if max_v is None or min_v is None:
+            raise ValueError("max or min value is None")
         return ArrayInfo(
             max=max_v,
             min=min_v,
@@ -108,6 +111,8 @@ class Colleciton(defaultdict):
                 y_min = item.y
             if y_max is None or item.y > y_max:
                 y_max = item.y
+        if x_min is None or y_min is None or x_max is None or y_max is None:
+            raise ValueError("no items found")
         x_min -= expand
         y_min -= expand
         x_max += expand
@@ -164,7 +169,7 @@ class Colleciton(defaultdict):
         return tiles
 
 
-def from_file(file: Union[str, Path]) -> Colleciton:
+def from_file(*files: Union[str, Path]) -> Colleciton:
     """file format:
     ```
     #net  value  x      y      path
@@ -177,7 +182,15 @@ def from_file(file: Union[str, Path]) -> Colleciton:
     ```
     """
     collection = Colleciton()
-    for line in Path(file).read_text().splitlines():
+    for file in files:
+        from_string(Path(file).read_text(), collection)
+    return collection
+
+
+def from_string(string: str, collection: Optional[Colleciton] = None) -> Colleciton:
+    if collection is None:
+        collection = Colleciton()
+    for line in string.splitlines():
         tokens = line.partition("#")[0].split()
         if not tokens:
             continue

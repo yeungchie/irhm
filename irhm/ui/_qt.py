@@ -70,4 +70,4 @@ else:
     from PySide6.QtGui import QAction, QIcon
     from PySide6.QtCore import Qt
 
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
+from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg

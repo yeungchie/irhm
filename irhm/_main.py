@@ -1,6 +1,7 @@
 from argparse import ArgumentParser
+import sys
 
-from .ir import from_file
+from .ir import from_file, from_string
 from .ui import HeatmapApp
 
 
@@ -11,6 +12,7 @@ def main() -> int:
     parser.add_argument(
         "file",
         type=str,
+        nargs="*",
         help="input file",
     )
     parser.add_argument(
@@ -21,10 +23,17 @@ def main() -> int:
     )
     args = parser.parse_args()
 
+    if args.file:
+        collection = from_file(*args.file)
+    else:
+        collection = from_string(sys.stdin.read())
+
+    col, row = tuple(map(int, args.array.split("x")))
+
     app = HeatmapApp(
         [],
-        collection=from_file(args.file),
-        array=tuple(map(int, args.array.split("x"))),
+        collection=collection,
+        array=(col, row),
     )
     app.show()
     return app.exec()

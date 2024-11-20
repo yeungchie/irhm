@@ -1,6 +1,5 @@
-from typing import Optional, Sequence, Tuple, Callable
+from typing import Sequence, Tuple, Callable
 from pathlib import Path
-from matplotlib.backend_bases import MouseEvent
 from matplotlib.figure import Figure
 from matplotlib.patches import Rectangle
 import seaborn
@@ -33,14 +32,13 @@ class HeatmapApp(QApplication):
     def __init__(
         self,
         *args,
-        collection: Colleciton = None,
+        collection: Colleciton,
         array: Tuple[int, int] = (10, 10),
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
         self.setStyle("Fusion")
-        self.window = HeatmapWindow()
-        self.window.collection = collection
+        self.window = HeatmapWindow(collection)
         self.window.array = array
         self.window.init()
 
@@ -51,7 +49,7 @@ class HeatmapApp(QApplication):
 class HeatmapWindow(QMainWindow):
     def __init__(
         self,
-        collection: Optional[Colleciton] = None,
+        collection: Colleciton,
         array: Tuple[int, int] = (10, 10),
     ) -> None:
         super().__init__()
@@ -65,7 +63,7 @@ class HeatmapWindow(QMainWindow):
         return self.__collection
 
     @collection.setter
-    def collection(self, value: Optional[Colleciton]) -> None:
+    def collection(self, value: Colleciton) -> None:
         self.__collection = value
         self.inited = False
 
@@ -75,7 +73,8 @@ class HeatmapWindow(QMainWindow):
 
     @array.setter
     def array(self, value: Tuple[int, int]) -> None:
-        self.__array = tuple(map(int, value[:2]))
+        col, row = tuple(map(int, value[:2]))
+        self.__array = (col, row)
 
     @property
     def value_array(self):
@@ -160,9 +159,12 @@ class HeatmapWindow(QMainWindow):
         self.heatmap_figure.clear()
         self.heatmap_canvas.draw()
 
-    def __heatmap_canvas_cb(self, event: MouseEvent) -> None:
+    def __heatmap_canvas_cb(self, event) -> None:
         if event.inaxes == self.heatmap_axes:
-            col, row = int(event.xdata), int(event.ydata)
+            x, y = event.xdata, event.ydata
+            if x is None or y is None:
+                return
+            col, row = int(x), int(y)
             self.__refresh_net_table(col, row)
             self.__update_heatmap_hilight(col, row)
 
