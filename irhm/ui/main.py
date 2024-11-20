@@ -25,8 +25,8 @@ from ._qt import (
     Qt,
     FigureCanvasQTAgg,
 )
-from .ir import Colleciton, Tiles
-from . import release
+from ..ir import Colleciton, Tiles
+from .. import release
 
 
 class HeatmapApp(QApplication):
