@@ -171,7 +171,7 @@ class HeatmapWindow(QMainWindow):
         info = self.tiles.array_info(net1, net2)
         self.__value_array = info.ndarray
         seaborn.heatmap(
-            self.value_array,
+            self.value_array.transpose(),
             # annot=True,
             # fmt=".2f",
             cmap="coolwarm",
@@ -190,7 +190,7 @@ class HeatmapWindow(QMainWindow):
         qtr_value = (info.max - info.min) / 4
         for col in range(self.array[0]):
             for row in range(self.array[1]):
-                value = self.value_array[row, col]
+                value = self.value_array[col, row]
                 if abs(value - mid_value) > qtr_value:
                     color = "#FFFFFF"
                 else:
